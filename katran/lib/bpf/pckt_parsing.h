@@ -132,6 +132,13 @@ __attribute__((__always_inline__)) static inline bool parse_tcp(
     pckt->flags |= F_SYN_SET;
   }
 
+  if(DIPLOMA_DEBUG){
+    // if destination port is 8001 (printing only incoming packets to port 8001)
+    if (bpf_ntohs(tcp->dest) == 8001){
+      bpf_printk("Parsing TCP packet: src port: %d, dst port: %d\n", bpf_ntohs(tcp->source), bpf_ntohs(tcp->dest));
+    }  
+  }
+
   if (!is_icmp) {
     pckt->flow.port16[0] = tcp->source;
     pckt->flow.port16[1] = tcp->dest;
@@ -478,6 +485,9 @@ __attribute__((__always_inline__)) static inline int parse_l3_headers(
     *th_off += nh_off + iph_len;
     if (*protocol == IPPROTO_FRAGMENT) {
       // we drop fragmented packets
+      if(DIPLOMA_DEBUG){
+        bpf_printk("Dropping fragmented IPv6 packet\n");
+      }
       return XDP_DROP;
     } else if (*protocol == IPPROTO_ICMPV6) {
       return FURTHER_PROCESSING;
@@ -494,6 +504,9 @@ __attribute__((__always_inline__)) static inline int parse_l3_headers(
     if (iph->ihl != 5) {
       // if len of ipv4 hdr is not equal to 20bytes that means that header
       // contains ip options, and we dont support em
+      if(DIPLOMA_DEBUG){
+        bpf_printk("Dropping IPv4 packet with options\n");
+      }
       return XDP_DROP;
     }
     pckt->tos = iph->tos;
@@ -504,6 +517,9 @@ __attribute__((__always_inline__)) static inline int parse_l3_headers(
 
     if (iph->frag_off & PCKT_FRAGMENTED) {
       // we drop fragmented packets.
+      if(DIPLOMA_DEBUG){
+        bpf_printk("Dropping fragmented IPv4 packet\n");
+      }
       return XDP_DROP;
     }
     if (*protocol == IPPROTO_ICMP) {

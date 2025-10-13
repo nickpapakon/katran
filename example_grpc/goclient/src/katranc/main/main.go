@@ -19,7 +19,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"katranc/katranc"
+	"example_grpc/goclient/src/katranc/katranc"
 )
 
 const (

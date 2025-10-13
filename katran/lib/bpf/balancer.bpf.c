@@ -3,6 +3,12 @@
  * This is main balancer's application code
  */
 
+// it is important that I define this before including any other headers
+// so that it is available in all the included headers
+#define DIPLOMA_DEBUG true
+#define DIPLOMA_PACKET_COUNTER false
+int packet_counter = 0;
+
 #include <linux/in.h>
 #include <linux/ip.h>
 #include <linux/ipv6.h>
@@ -1065,12 +1071,26 @@ process_packet(struct xdp_md* xdp, __u64 nh_off, bool is_ipv6) {
       return XDP_DROP;
     }
   }
-
-  return XDP_TX;
+  if(DIPLOMA_DEBUG){
+    bpf_printk("Redirecting packet to real %d\n", pckt.real_index);
+    if(is_ipv6){
+      bpf_printk("Packet is IPv6\n");
+    } else {
+      bpf_printk("Packet is IPv4\n");
+      bpf_printk("IP hex: 0x%x", dst->dst);
+    }
+  }
+  return XDP_TX; // CHANGE - TODO to XDP_TX
 }
 
 SEC(PROG_SEC_NAME)
 int balancer_ingress(struct xdp_md* ctx) {
+  if (DIPLOMA_PACKET_COUNTER){
+    bpf_printk("Entering balancer_ingress for packet: %d...\n", packet_counter);
+    packet_counter++;
+  }
+  
+
   void* data = (void*)(long)ctx->data;
   void* data_end = (void*)(long)ctx->data_end;
   struct ethhdr* eth = data;
