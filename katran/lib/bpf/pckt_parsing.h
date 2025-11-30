@@ -37,6 +37,7 @@
 
 #include "katran/lib/bpf/balancer_consts.h"
 #include "katran/lib/bpf/balancer_helpers.h"
+#include "mqtt.h"
 
 struct quic_long_header {
   __u8 flags;
@@ -133,10 +134,27 @@ __attribute__((__always_inline__)) static inline bool parse_tcp(
   }
 
   if(DIPLOMA_DEBUG){
-    // if destination port is 8001 (printing only incoming packets to port 8001)
-    if (bpf_ntohs(tcp->dest) == 8001){
-      bpf_printk("Parsing TCP packet: src port: %d, dst port: %d\n", bpf_ntohs(tcp->source), bpf_ntohs(tcp->dest));
-    }  
+    const char *delimeter = "\n\n*************************\n";
+
+    bpf_printk("Parsing TCP packet: src port: %d, dst port: %d\n",
+      bpf_ntohs(tcp->source), bpf_ntohs(tcp->dest)
+    );
+    
+    // Parse MQTT if dst port is MQTT_PORT
+    if(bpf_ntohs(tcp->dest) == MQTT_PORT){
+      struct mqtthdr * mqtt_h = (void *)tcp + tcp->doff * 4;
+      if((void *)(mqtt_h + 1) > data_end){
+          bpf_printk("Does not contain all the required MQTT hdr bytes");
+      } else {
+        bpf_printk("%s (MQTT) \n msg_type = 0x%x, flags = 0x%x, remaining_len = 0x%x \n",
+            delimeter,
+            mqtt_h->msg_type,
+            mqtt_h->flags,
+            mqtt_h->remaining_len
+        );
+      }
+    }
+
   }
 
   if (!is_icmp) {
