@@ -590,7 +590,9 @@ get_bpftool() {
     git clone --recurse-submodules https://github.com/libbpf/bpftool.git || true
     cd "${BPFTOOL_DIR}"/src
     make
+    mkdir -p "${INSTALL_DIR}/bin"
     cp "${BPFTOOL_DIR}"/src/bpftool "${INSTALL_DIR}/bin/bpftool"
+    ln -s "${INSTALL_DIR}/bin/bpftool" /usr/local/bin/bpftool
     echo -e "${COLOR_GREEN}bpftool is installed ${COLOR_OFF}"
     popd
     touch "${DEPS_DIR}/bpftool_installed"
@@ -640,15 +642,17 @@ test_katran() {
     popd
 }
 
-get_dev_tools
-get_required_libs
-get_libevent
-get_gflags
-get_fast_float
-get_folly
-get_clang
-get_gtest
-get_libbpf
+if [ "$BUILD_DEPS" -eq 1 ]; then
+    get_dev_tools
+    get_required_libs
+    get_libevent
+    get_gflags
+    get_fast_float
+    get_folly
+    get_clang
+    get_gtest
+    get_libbpf
+fi
 if [ "$BUILD_EXAMPLE_THRIFT" -eq 1 ]; then
   get_mstch
   get_fizz
@@ -663,7 +667,7 @@ fi
 if [ "$BUILD_KATRAN_TPR" -eq 1 ]; then
   get_bpftool
 fi
-if [ -z "$INSTALL_DEPS_ONLY" ]; then
+if [ "$BUILD_AND_TEST" -eq 1 ]; then
   build_katran
   test_katran
 fi
