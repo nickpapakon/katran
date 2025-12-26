@@ -592,7 +592,7 @@ get_bpftool() {
     make
     mkdir -p "${INSTALL_DIR}/bin"
     cp "${BPFTOOL_DIR}"/src/bpftool "${INSTALL_DIR}/bin/bpftool"
-    ln -s "${INSTALL_DIR}/bin/bpftool" /usr/local/bin/bpftool
+    sudo ln -s "${INSTALL_DIR}/bin/bpftool" /usr/local/bin/bpftool
     echo -e "${COLOR_GREEN}bpftool is installed ${COLOR_OFF}"
     popd
     touch "${DEPS_DIR}/bpftool_installed"
