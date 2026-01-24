@@ -6,8 +6,6 @@
 // it is important that I define this before including any other headers
 // so that it is available in all the included headers
 #define DIPLOMA_DEBUG true
-#define DIPLOMA_PACKET_COUNTER false
-int packet_counter = 0;
 
 #include <linux/in.h>
 #include <linux/ip.h>
@@ -1085,11 +1083,6 @@ process_packet(struct xdp_md* xdp, __u64 nh_off, bool is_ipv6) {
 
 SEC(PROG_SEC_NAME)
 int balancer_ingress(struct xdp_md* ctx) {
-  if (DIPLOMA_PACKET_COUNTER){
-    bpf_printk("Entering balancer_ingress for packet: %d...\n", packet_counter);
-    packet_counter++;
-  }
-  
 
   void* data = (void*)(long)ctx->data;
   void* data_end = (void*)(long)ctx->data_end;

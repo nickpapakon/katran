@@ -45,6 +45,15 @@ DEFINE_string(
     healthchecker_prog,
     "./healthchecking_ipip.o",
     "path to healthchecking bpf prog");
+DEFINE_bool(
+    mqtt_fwd,
+    false,
+    "enable MQTT topic based forwarding");
+DEFINE_string(
+    mqtt_topic_based_fwd_prog,
+    "./mqtt_topic_based_fwd.bpf.o",
+    "path to MQTT-Topic based forwarding bpf prog");
+DEFINE_int32(mqtt_prog_pos, 1, "mqtt_topic_based_fwd bpf program's position inside root xdp array");
 DEFINE_string(
     default_mac,
     "00:00:00:00:00:01",
@@ -125,6 +134,9 @@ int main(int argc, char** argv) {
       .rootMapPath = FLAGS_map_path,
       .rootMapPos = static_cast<uint32_t>(FLAGS_prog_pos),
       .enableHc = FLAGS_hc_forwarding,
+      .enableMqttFwd = FLAGS_mqtt_fwd,
+      .mqttTopicBasedFwdProgPath = FLAGS_mqtt_topic_based_fwd_prog,
+      .mqttProgPos = static_cast<uint32_t>(FLAGS_mqtt_prog_pos)
   };
   config.LruSize = static_cast<uint64_t>(FLAGS_lru_size);
   config.forwardingCores = forwardingCores;

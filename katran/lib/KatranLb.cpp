@@ -762,6 +762,13 @@ void KatranLb::loadBpfProgs() {
     throw std::invalid_argument("can't load main bpf program");
   }
 
+  if (config_.enableMqttFwd) {
+    res = bpfAdapter_->loadBpfProg(config_.mqttTopicBasedFwdProgPath);
+    if (res) {
+      throw std::invalid_argument("can't load mqtt_topic_based_fwd bpf program");
+    } 
+  }
+
   if (config_.enableHc) {
     res = bpfAdapter_->loadBpfProg(config_.healthcheckingProgPath);
     if (res) {
@@ -908,6 +915,18 @@ void KatranLb::attachBpfProgs() {
       throw std::invalid_argument(fmt::format(
           "can't register in root array, error: {}", folly::errnoStr(errno)));
     }
+
+    if (config_.enableMqttFwd) {
+      auto mqtt_fwd_fd =
+          bpfAdapter_->getProgFdByName(kMqttTopicBasedFwdProgName.toString());
+
+      res = bpfAdapter_->bpfUpdateMap(rootMapFd_, &config_.mqttProgPos, &mqtt_fwd_fd);
+      if (res) {
+        throw std::invalid_argument(fmt::format(
+            "can't register mqtt_topic_based_fwd program in root array, error: {}", folly::errnoStr(errno)));
+      }
+    }
+
   }
 
   if (config_.enableHc && !progsReloaded_) {

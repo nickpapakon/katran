@@ -146,6 +146,7 @@ enum class KatranMonitorState {
  */
 constexpr folly::StringPiece kBalancerProgName = "balancer_ingress";
 constexpr folly::StringPiece kHealthcheckerProgName = "healthcheck_encap";
+constexpr folly::StringPiece kMqttTopicBasedFwdProgName = "mqtt_topic_based_vip_selection";
 } // namespace
 
 /**
