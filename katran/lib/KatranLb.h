@@ -146,7 +146,8 @@ enum class KatranMonitorState {
  */
 constexpr folly::StringPiece kBalancerProgName = "balancer_ingress";
 constexpr folly::StringPiece kHealthcheckerProgName = "healthcheck_encap";
-constexpr folly::StringPiece kMqttTopicBasedFwdProgName = "mqtt_topic_based_vip_selection";
+constexpr folly::StringPiece kMqttTopicBasedFwdProgName = "mqtt_fwd";
+// keep prog-names small <= 15 chars ( https://docs.ebpf.io/linux/syscall/BPF_PROG_LOAD/ )
 } // namespace
 
 /**

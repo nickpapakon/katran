@@ -14,7 +14,7 @@ struct {
 
 
 SEC("xdp")
-int mqtt_topic_based_vip_selection(struct xdp_md *ctx)
+int mqtt_fwd(struct xdp_md *ctx)
 {   
     // [Context]: take the pointer to packet data and data end
     void *data = (void *)(long)ctx->data;
