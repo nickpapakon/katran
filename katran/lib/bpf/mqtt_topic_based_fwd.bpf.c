@@ -1,16 +1,19 @@
-#include "mqtt_topic_based_fwd.h"
-#include "MQTTPacket.h"
+#include "katran/lib/bpf/mqtt_topic_based_fwd.h"
+#include "katran/lib/bpf/MQTTPacket.h"
 
 #define BPF_PRINT 1
 #define ROOT_ARRAY_SIZE 3
 
-struct {
-  __uint(type, BPF_MAP_TYPE_PROG_ARRAY);
-  __type(key, __u32);
-  __type(value, __u32);
-  __uint(max_entries, ROOT_ARRAY_SIZE);
-  __uint(pinning, LIBBPF_PIN_BY_NAME);
-} root_array SEC(".maps");
+// TODO:    look at root_array in order to make
+//          bpf_tail_call(ctx, &root_array, 2); 
+//          (fwd to Katran BPF balancer bpf prog)
+// struct {
+//   __uint(type, BPF_MAP_TYPE_PROG_ARRAY);
+//   __type(key, __u32);
+//   __type(value, __u32);
+//   __uint(max_entries, ROOT_ARRAY_SIZE);
+//   __uint(pinning, LIBBPF_PIN_BY_NAME);
+// } root_array SEC(".maps");
 
 
 SEC("xdp")
@@ -225,7 +228,9 @@ abort:
 
 call_katran:
     if (BPF_PRINT) bpf_printk("Calling katran XDP program\n");
-    bpf_tail_call(ctx, &root_array, 2);
+    return XDP_PASS;
+    // TODO
+    // bpf_tail_call(ctx, &root_array, 2);
 
     if (BPF_PRINT) bpf_printk("Tail call failed in katran XDP program\n Return XDP action: %d", ret);
     return ret;

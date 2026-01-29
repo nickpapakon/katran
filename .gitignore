@@ -1,2 +1,8 @@
 _build/
 .vscode/
+example_grpc/go.mod
+example_grpc/go.sum
+example_grpc/goclient/pkg/
+example_grpc/goclient/src/katranc/lb_katran/
+example_grpc/goclient/src/katranc/main/main
+packet_capture.txt
