@@ -17,7 +17,6 @@ always += bpf/healthchecking_ipip.o
 always += bpf/healthchecking.bpf.o
 always += bpf/xdp_pktcntr.o
 always += bpf/xdp_root.o
-always += bpf/mqtt_topic_based_fwd.bpf.o
 
 HOSTCFLAGS += $(INCLUDEFLAGS) $(PFLAGS)
 HOSTCFLAGS_bpf_load.o += $(INCLUDEFLAGS) $(PFLAGS) -Wno-unused-variable
