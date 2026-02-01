@@ -66,6 +66,10 @@ __attribute__((__always_inline__)) static inline bool encap_v6(
   __u16 payload_len;
   __u32 saddr[4];
   __u8 proto;
+
+  // TODO:
+  // Handle IPv6 base packets with either IPv4 / IPv6 MQTT general vip
+
   // ip(6)ip6 encap
   if (XDP_ADJUST_HEAD_FUNC(xdp, 0 - (int)sizeof(struct ipv6hdr))) {
     return false;
@@ -81,9 +85,6 @@ __attribute__((__always_inline__)) static inline bool encap_v6(
   memcpy(new_eth->h_dest, cval->mac, 6);
   memcpy(new_eth->h_source, old_eth->h_dest, 6);
   new_eth->h_proto = BE_ETH_P_IPV6;
-
-  // TODO:
-  // Handle IPv6 base packets with either IPv4 / IPv6 MQTT general vip
 
   if (is_ipv6) {
     proto = IPPROTO_IPV6;
@@ -111,6 +112,24 @@ __attribute__((__always_inline__)) static inline bool encap_v4(
   struct iphdr* iph;
   struct ethhdr* new_eth;
   struct ethhdr* old_eth;
+
+  unsigned int key = 0;
+  struct ip_addr_union * mqtt_general_vip = 
+     bpf_map_lookup_elem(&mqtt_service_vips, &key);
+  
+  if (mqtt_general_vip){
+    // replace dest IP with the MQTT VIP that client uses
+    struct iphdr* old_iph = (void*)(long)xdp->data + sizeof(struct ethhdr);
+    if(old_iph + 1 > (void*)(long)xdp->data_end) {
+      if(DIPLOMA_DEBUG) bpf_printk("problem finding old_iph \n");
+      return false;
+    }
+    old_iph->daddr = mqtt_general_vip->ipv4;
+    if(DIPLOMA_DEBUG) bpf_printk("[special_mqtt_service] Setting dest IP to %x\n", bpf_ntohl(iph->daddr));
+  } else {
+    if(DIPLOMA_DEBUG) bpf_printk("[another_service] \n");
+  }
+
   __u32 ip_src = create_encap_ipv4_src(pckt->flow.port16[0], pckt->flow.src);
   __u64 csum = 0;
   // ipip encap
@@ -129,18 +148,6 @@ __attribute__((__always_inline__)) static inline bool encap_v4(
   memcpy(new_eth->h_source, old_eth->h_dest, 6);
   new_eth->h_proto = BE_ETH_P_IP;
 
-
-  unsigned int key = 0;
-  struct ip_addr_union * mqtt_general_vip = 
-     bpf_map_lookup_elem(&mqtt_service_vips, &key);
-  
-  if (mqtt_general_vip){
-    // replace dest IP with the MQTT VIP that client uses
-    iph->daddr = mqtt_general_vip->ipv4;
-    if(DIPLOMA_DEBUG) bpf_printk("[special_mqtt_service] Setting dest IP to %x\n", bpf_ntohl(iph->daddr));
-  } else {
-    if(DIPLOMA_DEBUG) bpf_printk("[another_service] \n");
-  }
 
   create_v4_hdr(iph, pckt->tos, ip_src, dst->dst, pkt_bytes, IPPROTO_IPIP);
 
