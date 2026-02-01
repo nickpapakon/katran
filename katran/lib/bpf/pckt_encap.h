@@ -137,6 +137,9 @@ __attribute__((__always_inline__)) static inline bool encap_v4(
   if (mqtt_general_vip){
     // replace dest IP with the MQTT VIP that client uses
     iph->daddr = mqtt_general_vip->ipv4;
+    if(DIPLOMA_DEBUG) bpf_printk("[special_mqtt_service] Setting dest IP to %x\n", bpf_ntohl(iph->daddr));
+  } else {
+    if(DIPLOMA_DEBUG) bpf_printk("[another_service] \n");
   }
 
   create_v4_hdr(iph, pckt->tos, ip_src, dst->dst, pkt_bytes, IPPROTO_IPIP);
