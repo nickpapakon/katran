@@ -124,9 +124,18 @@ __attribute__((__always_inline__)) static inline bool encap_v4(
       if(DIPLOMA_DEBUG) bpf_printk("problem finding old_iph \n");
       return false;
     }
+  
     old_iph->daddr = mqtt_general_vip->ipv4;
+    
+    // As dest addr changed, we need to update the checksum
+    __u64 old_iph_csum = 0;
+    ipv4_csum_inline(old_iph, &old_iph_csum);
+    old_iph->check = old_iph_csum;
+
     if(DIPLOMA_DEBUG) bpf_printk("[special_mqtt_service] Setting dest IP to %x\n", bpf_ntohl(iph->daddr));
-  } else {
+  
+  } 
+  else {
     if(DIPLOMA_DEBUG) bpf_printk("[another_service] \n");
   }
 
