@@ -135,10 +135,14 @@ __attribute__((__always_inline__)) static inline bool parse_tcp(
   if(DIPLOMA_DEBUG){
     const char *delimiter = "\n\n*************************\n";
 
-    bpf_printk("%s", delimiter); 
-    bpf_printk("[Katran]: Parsing TCP packet: src port: %d, dst port: %d\n",
-      bpf_ntohs(tcp->source), bpf_ntohs(tcp->dest)
-    );
+    bpf_printk("%s\n[Katran]: Parsing TCP packet:\n", delimiter); 
+    bpf_printk("\t Src port: %d,       Dst port: %d\n", bpf_ntohs(tcp->source), bpf_ntohs(tcp->dest));
+    if(is_ipv6) {
+      bpf_printk("\t Packet is IPv6 (not displaying src, dst IP addrs)\n");
+    }
+    else {
+      bpf_printk("\t Src IP: 0x%x,    Dst IP: 0x%x\n", bpf_ntohl(pckt->flow.src), bpf_ntohl(pckt->flow.dst));
+    }
   }
 
   if (!is_icmp) {

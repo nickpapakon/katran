@@ -133,7 +133,7 @@ __attribute__((__always_inline__)) static inline bool encap_v4(
     ipv4_csum_inline(old_iph, &old_iph_csum);
     old_iph->check = old_iph_csum;
 
-    if(DIPLOMA_DEBUG) bpf_printk("[special_mqtt_service] Setting dest IP to %x\n", bpf_ntohl(old_iph->daddr));
+    if(DIPLOMA_DEBUG) bpf_printk("[special_mqtt_service] Setting dest of inner IP to 0x%x\n", bpf_ntohl(old_iph->daddr));
   
   } 
   else {

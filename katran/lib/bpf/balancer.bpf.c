@@ -1071,12 +1071,11 @@ process_packet(struct xdp_md* xdp, __u64 nh_off, bool is_ipv6) {
     }
   }
   if(DIPLOMA_DEBUG){
-    bpf_printk("Redirecting packet to real %d\n", pckt.real_index);
+    bpf_printk("Redirecting packet to real with index: %d,\n", pckt.real_index);
     if(is_ipv6){
-      bpf_printk("Packet is IPv6\n");
+      bpf_printk("\t Packet is IPv6 (not displaying real address)\n");
     } else {
-      bpf_printk("Packet is IPv4\n");
-      bpf_printk("IP hex: 0x%x", dst->dst);
+      bpf_printk("\t IPv4 real addr: 0x%x", bpf_ntohl(dst->dst));
     }
   }
   return XDP_TX; // CHANGE - TODO to XDP_TX
