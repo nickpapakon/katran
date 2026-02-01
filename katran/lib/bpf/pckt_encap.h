@@ -39,6 +39,18 @@
 #include "katran/lib/bpf/flow_debug.h"
 #include "katran/lib/bpf/pckt_parsing.h"
 
+// if MQTT VIP is configured,
+// then we suppose that Katran is used only for these MQTT messages
+// Destination IP of the packet was 
+//        the specific VIP that was set by the mqtt_fwd program to specify the group of responsible brokers
+// Destination IP will be replaced by 
+//        the general MQTT_VIP that is used to discriminate packets of this service from other services 
+//        this is the initial dest VIP that client used 
+// TODO:  make it more generic to support operation on other VIPs 
+//        that correspond to a different service as well
+
+
+
 __attribute__((__always_inline__)) static inline bool encap_v6(
     struct xdp_md* xdp,
     struct ctl_value* cval,
@@ -69,6 +81,9 @@ __attribute__((__always_inline__)) static inline bool encap_v6(
   memcpy(new_eth->h_dest, cval->mac, 6);
   memcpy(new_eth->h_source, old_eth->h_dest, 6);
   new_eth->h_proto = BE_ETH_P_IPV6;
+
+  // TODO:
+  // Handle IPv6 base packets with either IPv4 / IPv6 MQTT general vip
 
   if (is_ipv6) {
     proto = IPPROTO_IPV6;
@@ -113,6 +128,16 @@ __attribute__((__always_inline__)) static inline bool encap_v4(
   memcpy(new_eth->h_dest, cval->mac, 6);
   memcpy(new_eth->h_source, old_eth->h_dest, 6);
   new_eth->h_proto = BE_ETH_P_IP;
+
+
+  unsigned int key = 0;
+  struct ip_addr_union * mqtt_general_vip = 
+     bpf_map_lookup_elem(&mqtt_service_vips, &key);
+  
+  if (mqtt_general_vip){
+    // replace dest IP with the MQTT VIP that client uses
+    iph->daddr = mqtt_general_vip->ipv4;
+  }
 
   create_v4_hdr(iph, pckt->tos, ip_src, dst->dst, pkt_bytes, IPPROTO_IPIP);
 
