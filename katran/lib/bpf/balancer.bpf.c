@@ -1060,6 +1060,31 @@ process_packet(struct xdp_md* xdp, __u64 nh_off, bool is_ipv6) {
 #endif
   // restore the original sport value to use it as a seed for the GUE sport
   pckt.flow.port16[0] = original_sport;
+
+  // if MQTT VIP is configured,
+  // then we suppose that Katran is used only for these MQTT messages
+  // Destination IP of the packet was 
+  //        the specific VIP that was set by the mqtt_fwd program to specify the group of responsible brokers
+  // Destination IP will be replaced by 
+  //        the general MQTT_VIP that is used to discriminate packets of this service from other services 
+  //        this is the initial dest VIP that client used 
+  // TODO:  make it more generic to support operation on other VIPs 
+  //        that correspond to a different service as well
+
+  unsigned int key = 0;
+  struct ip_addr_union * mqtt_general_vip = 
+     bpf_map_lookup_elem(&mqtt_service_vips, &key);
+  
+  if (mqtt_general_vip){
+    // replace dest IP with the MQTT VIP that client uses
+    if (is_ipv6){
+      memcpy(pckt.flow.dstv6, mqtt_general_vip->ipv6, 16);
+    }
+    else {
+      pckt.flow.dst = mqtt_general_vip->ipv4;
+    }
+  }
+
   if (dst->flags & F_IPV6) {
     if (!PCKT_ENCAP_V6(xdp, cval, is_ipv6, &pckt, dst, pkt_bytes)) {
       return XDP_DROP;

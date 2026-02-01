@@ -22,6 +22,16 @@
  * balancer and by packet's parsing routines
  */
 
+
+// generic ip address union added for MQTT general vip
+struct ip_addr_union {
+    union {
+        __be32 ipv4;
+        __be32 ipv6[4];
+    };
+};
+
+
 // flow metadata
 struct flow_key {
   union {
