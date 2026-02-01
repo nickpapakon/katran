@@ -129,10 +129,11 @@ __attribute__((__always_inline__)) static inline bool encap_v4(
     
     // As dest addr changed, we need to update the checksum
     __u64 old_iph_csum = 0;
+    old_iph->check = 0;
     ipv4_csum_inline(old_iph, &old_iph_csum);
     old_iph->check = old_iph_csum;
 
-    if(DIPLOMA_DEBUG) bpf_printk("[special_mqtt_service] Setting dest IP to %x\n", bpf_ntohl(iph->daddr));
+    if(DIPLOMA_DEBUG) bpf_printk("[special_mqtt_service] Setting dest IP to %x\n", bpf_ntohl(old_iph->daddr));
   
   } 
   else {
