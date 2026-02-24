@@ -5,7 +5,7 @@
 
 // it is important that I define this before including any other headers
 // so that it is available in all the included headers
-#define DIPLOMA_DEBUG true
+#define DIPLOMA_DEBUG false
 
 #include <linux/in.h>
 #include <linux/ip.h>
