@@ -3,6 +3,11 @@
  * This is main balancer's application code
  */
 
+// it is important that I define this before including any other headers
+// so that it is available in all the included headers
+#define DIPLOMA_DEBUG 0
+#define MQTT_LB_MODE 1
+
 #include <linux/in.h>
 #include <linux/ip.h>
 #include <linux/ipv6.h>
@@ -1056,6 +1061,7 @@ process_packet(struct xdp_md* xdp, __u64 nh_off, bool is_ipv6) {
 #endif
   // restore the original sport value to use it as a seed for the GUE sport
   pckt.flow.port16[0] = original_sport;
+
   if (dst->flags & F_IPV6) {
     if (!PCKT_ENCAP_V6(xdp, cval, is_ipv6, &pckt, dst, pkt_bytes)) {
       return XDP_DROP;
@@ -1065,12 +1071,20 @@ process_packet(struct xdp_md* xdp, __u64 nh_off, bool is_ipv6) {
       return XDP_DROP;
     }
   }
-
-  return XDP_TX;
+  if(DIPLOMA_DEBUG){
+    bpf_printk("Redirecting packet to real with index: %d,\n", pckt.real_index);
+    if(is_ipv6){
+      bpf_printk("\t Packet is IPv6 (not displaying real address)\n");
+    } else {
+      bpf_printk("\t IPv4 real addr: 0x%x", bpf_ntohl(dst->dst));
+    }
+  }
+  return XDP_TX; // CHANGE - TODO to XDP_TX
 }
 
 SEC(PROG_SEC_NAME)
 int balancer_ingress(struct xdp_md* ctx) {
+
   void* data = (void*)(long)ctx->data;
   void* data_end = (void*)(long)ctx->data_end;
   struct ethhdr* eth = data;

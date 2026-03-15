@@ -19,11 +19,19 @@
 
 #define ROOT_ARRAY_SIZE 3
 
+// not included in linux_includes/bpf_helpers.h (old version)
+enum libbpf_pin_type {
+	LIBBPF_PIN_NONE,
+	/* PIN_BY_NAME: pin maps by name (in /sys/fs/bpf by default) */
+	LIBBPF_PIN_BY_NAME,
+};
+
 struct {
   __uint(type, BPF_MAP_TYPE_PROG_ARRAY);
   __type(key, __u32);
   __type(value, __u32);
   __uint(max_entries, ROOT_ARRAY_SIZE);
+  __uint(pinning, LIBBPF_PIN_BY_NAME);
 } root_array SEC(".maps");
 
 SEC("xdp")

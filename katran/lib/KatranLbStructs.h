@@ -28,6 +28,7 @@ namespace katran {
 constexpr uint32_t kDefaultPriority = 2307;
 
 namespace {
+constexpr uint32_t DefaultMqttProgPos = 1;
 constexpr uint32_t kDefaultKatranPos = 2;
 constexpr uint32_t kDefaultMaxVips = 512;
 constexpr uint32_t kDefaultMaxReals = 4096;
@@ -220,6 +221,9 @@ struct KatranConfig {
   uint32_t mainInterfaceIndex = kUnspecifiedInterfaceIndex;
   uint32_t hcInterfaceIndex = kUnspecifiedInterfaceIndex;
   bool cleanupOnShutdown = true;
+  bool enableMqttFwd = false;
+  std::string mqttTopicBasedFwdProgPath;
+  uint32_t mqttProgPos = DefaultMqttProgPos;
 };
 
 /**

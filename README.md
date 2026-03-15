@@ -168,6 +168,9 @@ performance penalties on the same server (compare to some of other
 
 ## Trivia
 
+### Diploma thesis
+Utilize Katran for load balancing between MQTT clients and MQTT brokers-cluster.
+
 katran is named (it's actually an alternative name) after __[spiny dogfish shark](https://en.wikipedia.org/wiki/Spiny_dogfish)__.
 
 ## License

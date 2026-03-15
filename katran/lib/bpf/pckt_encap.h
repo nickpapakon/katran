@@ -39,6 +39,18 @@
 #include "katran/lib/bpf/flow_debug.h"
 #include "katran/lib/bpf/pckt_parsing.h"
 
+// if MQTT VIP is configured,
+// then we suppose that Katran is used only for these MQTT messages
+// Destination IP of the packet was 
+//        the specific VIP that was set by the mqtt_fwd program to specify the group of responsible brokers
+// Destination IP will be replaced by 
+//        the general MQTT_VIP that is used to discriminate packets of this service from other services 
+//        this is the initial dest VIP that client used 
+// TODO:  make it more generic to support operation on other VIPs 
+//        that correspond to a different service as well
+
+
+
 __attribute__((__always_inline__)) static inline bool encap_v6(
     struct xdp_md* xdp,
     struct ctl_value* cval,
@@ -54,6 +66,10 @@ __attribute__((__always_inline__)) static inline bool encap_v6(
   __u16 payload_len;
   __u32 saddr[4];
   __u8 proto;
+
+  // TODO:
+  // Handle IPv6 base packets with either IPv4 / IPv6 MQTT general vip
+
   // ip(6)ip6 encap
   if (XDP_ADJUST_HEAD_FUNC(xdp, 0 - (int)sizeof(struct ipv6hdr))) {
     return false;
@@ -96,6 +112,37 @@ __attribute__((__always_inline__)) static inline bool encap_v4(
   struct iphdr* iph;
   struct ethhdr* new_eth;
   struct ethhdr* old_eth;
+
+  unsigned int key = 0;
+  struct ip_addr_union * mqtt_general_vip = 
+     bpf_map_lookup_elem(&mqtt_service_vips, &key);
+  
+  // TODO: currently it acts only as simple LB
+  // 1. Make differentiation between MQTT and simple VIPs (extra flag)
+  // 2. When MQTT VIPs are configured, the old_iph->daddr should change to the mqtt_general_vip
+  if (MQTT_LB_MODE && mqtt_general_vip){
+    // replace dest IP with the MQTT VIP that client uses
+    struct iphdr* old_iph = (void*)(long)xdp->data + sizeof(struct ethhdr);
+    if(old_iph + 1 > (void*)(long)xdp->data_end) {
+      if(DIPLOMA_DEBUG) bpf_printk("problem finding old_iph \n");
+      return false;
+    }
+  
+    old_iph->daddr = mqtt_general_vip->ipv4;
+    
+    // As dest addr changed, we need to update the checksum
+    __u64 old_iph_csum = 0;
+    old_iph->check = 0;
+    ipv4_csum_inline(old_iph, &old_iph_csum);
+    old_iph->check = old_iph_csum;
+
+    if(DIPLOMA_DEBUG) bpf_printk("[special_mqtt_service] Setting dest of inner IP to 0x%x\n", bpf_ntohl(old_iph->daddr));
+  
+  } 
+  else {
+    if(DIPLOMA_DEBUG) bpf_printk("[another_service] \n");
+  }
+
   __u32 ip_src = create_encap_ipv4_src(pckt->flow.port16[0], pckt->flow.src);
   __u64 csum = 0;
   // ipip encap
@@ -113,6 +160,7 @@ __attribute__((__always_inline__)) static inline bool encap_v4(
   memcpy(new_eth->h_dest, cval->mac, 6);
   memcpy(new_eth->h_source, old_eth->h_dest, 6);
   new_eth->h_proto = BE_ETH_P_IP;
+
 
   create_v4_hdr(iph, pckt->tos, ip_src, dst->dst, pkt_bytes, IPPROTO_IPIP);
 

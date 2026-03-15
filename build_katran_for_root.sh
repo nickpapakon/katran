@@ -101,13 +101,13 @@ fi
 
 get_dev_tools() {
     if [ -f /etc/redhat-release ]; then
-        sudo yum install -y epel-release
-        sudo yum-config-manager --enable PowerTools
-        sudo yum groupinstall -y "Development Tools"
-        sudo yum install -y cmake
+        yum install -y epel-release
+        yum-config-manager --enable PowerTools
+        yum groupinstall -y "Development Tools"
+        yum install -y cmake
     else
-        sudo apt-get update
-        sudo apt-get install -y   \
+        apt-get update
+        apt-get install -y   \
             build-essential       \
             cmake                 \
             libbison-dev          \
@@ -120,7 +120,7 @@ get_dev_tools() {
 
 get_required_libs() {
     if [ -f /etc/redhat-release ]; then
-        sudo yum install -y \
+        yum install -y \
             git \
             elfutils-libelf-devel \
             libmnl-devel \
@@ -130,7 +130,7 @@ get_required_libs() {
             libsodium-static \
             fmt-devel
     else
-        sudo apt-get install -y    \
+        apt-get install -y    \
             libgoogle-glog-dev     \
             libgflags-dev          \
             libelf-dev             \
@@ -237,7 +237,7 @@ get_folly() {
 
     rm -rf "$FOLLY_DIR"
     if [ -f /etc/redhat-release ]; then
-        sudo yum install -y \
+        yum install -y \
             boost-devel \
             boost-static \
             lz4-devel \
@@ -255,7 +255,7 @@ get_folly() {
             bzip2-devel \
             binutils-devel
     else
-        sudo apt-get install -y       \
+        apt-get install -y       \
             g++                       \
             automake                  \
             autoconf                  \
@@ -306,7 +306,7 @@ get_clang() {
     fi
 
     if [ -f /etc/redhat-release ]; then
-        sudo yum install -y clang llvm
+        yum install -y clang llvm
     else
         CLANG_DIR=$DEPS_DIR/clang
         rm -rf "$CLANG_DIR"
@@ -437,7 +437,7 @@ get_zstd() {
     git clone --depth 1 https://github.com/facebook/zstd --branch v1.3.7
     cd "$ZSTD_DIR"
     make -j "$NCPUS"
-    sudo make install
+    make install
     echo -e "${COLOR_GREEN}zstd is installed ${COLOR_OFF}"
     popd
     touch "${DEPS_DIR}/zstd_installed"
@@ -451,7 +451,7 @@ get_fbthrift() {
     FBTHRIFT_BUILD_DIR=$DEPS_DIR/fbthrift/build/
     rm -rf "$FBTHRIFT_DIR"
     # install fb thrift specific deps
-    sudo apt-get install -y \
+    apt-get install -y \
         libkrb5-dev \
         flex
     pushd .
@@ -505,9 +505,9 @@ get_grpc() {
     GO_INSTALLED=$(which go || true)
     if [ -z "$GO_INSTALLED" ]; then
         if [ -f /etc/centos-release ]; then
-            sudo yum install -y golang
+            yum install -y golang
         else
-            sudo apt-get install -y golang
+            apt-get install -y golang
         fi
     fi
     GRPC_DIR=$DEPS_DIR/grpc
@@ -590,9 +590,7 @@ get_bpftool() {
     git clone --recurse-submodules https://github.com/libbpf/bpftool.git || true
     cd "${BPFTOOL_DIR}"/src
     make
-    mkdir -p "${INSTALL_DIR}/bin"
     cp "${BPFTOOL_DIR}"/src/bpftool "${INSTALL_DIR}/bin/bpftool"
-    sudo ln -s "${INSTALL_DIR}/bin/bpftool" /usr/local/bin/bpftool
     echo -e "${COLOR_GREEN}bpftool is installed ${COLOR_OFF}"
     popd
     touch "${DEPS_DIR}/bpftool_installed"
@@ -614,7 +612,7 @@ build_katran() {
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     -DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=ON \
     -DLIB_BPF_PREFIX=$LIB_BPF_PREFIX \
-    -DCMAKE_CXX_STANDARD=20 \
+    -DCMAKE_CXX_STANDARD=17 \
     -DBUILD_TESTS=On"
 
     # Append verbose flag if VERBOSE is set to 1
@@ -642,17 +640,15 @@ test_katran() {
     popd
 }
 
-if [ "$BUILD_DEPS" -eq 1 ]; then
-    get_dev_tools
-    get_required_libs
-    get_libevent
-    get_gflags
-    get_fast_float
-    get_folly
-    get_clang
-    get_gtest
-    get_libbpf
-fi
+get_dev_tools
+get_required_libs
+get_libevent
+get_gflags
+get_fast_float
+get_folly
+get_clang
+get_gtest
+get_libbpf
 if [ "$BUILD_EXAMPLE_THRIFT" -eq 1 ]; then
   get_mstch
   get_fizz
@@ -667,7 +663,7 @@ fi
 if [ "$BUILD_KATRAN_TPR" -eq 1 ]; then
   get_bpftool
 fi
-if [ "$BUILD_AND_TEST" -eq 1 ]; then
+if [ -z "$INSTALL_DEPS_ONLY" ]; then
   build_katran
   test_katran
 fi

@@ -28,6 +28,24 @@
 #include "katran/lib/bpf/balancer_consts.h"
 #include "katran/lib/bpf/balancer_structs.h"
 
+// not included in linux_includes/bpf_helpers.h (old version)
+enum libbpf_pin_type {
+	LIBBPF_PIN_NONE,
+	/* PIN_BY_NAME: pin maps by name (in /sys/fs/bpf by default) */
+	LIBBPF_PIN_BY_NAME,
+};
+
+// Map that holds the special MQTT VIP that client uses 
+//  to interact with the MQTT topic-based Load Balancer
+struct {
+  __uint(type, BPF_MAP_TYPE_HASH);
+  __type(key, unsigned int);
+  __type(value, struct ip_addr_union);
+  __uint(max_entries, 10);
+  __uint(map_flags, NO_FLAGS);
+  __uint(pinning, LIBBPF_PIN_BY_NAME);
+} mqtt_service_vips SEC(".maps");
+
 // map, which contains all the vips for which we are doing load balancing
 struct {
   __uint(type, BPF_MAP_TYPE_HASH);
