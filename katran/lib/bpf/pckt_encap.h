@@ -117,7 +117,10 @@ __attribute__((__always_inline__)) static inline bool encap_v4(
   struct ip_addr_union * mqtt_general_vip = 
      bpf_map_lookup_elem(&mqtt_service_vips, &key);
   
-  if (mqtt_general_vip){
+  // TODO: currently it acts only as simple LB
+  // 1. Make differentiation between MQTT and simple VIPs (extra flag)
+  // 2. When MQTT VIPs are configured, the old_iph->daddr should change to the mqtt_general_vip
+  if (MQTT_LB_MODE && mqtt_general_vip){
     // replace dest IP with the MQTT VIP that client uses
     struct iphdr* old_iph = (void*)(long)xdp->data + sizeof(struct ethhdr);
     if(old_iph + 1 > (void*)(long)xdp->data_end) {
