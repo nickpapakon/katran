@@ -5,8 +5,8 @@
 
 // it is important that I define this before including any other headers
 // so that it is available in all the included headers
-#define DIPLOMA_DEBUG false
-#define MQTT_LB_MODE true
+#define DIPLOMA_DEBUG 0
+#define MQTT_LB_MODE 1
 
 #include <linux/in.h>
 #include <linux/ip.h>
