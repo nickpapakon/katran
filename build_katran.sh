@@ -614,7 +614,7 @@ build_katran() {
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     -DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=ON \
     -DLIB_BPF_PREFIX=$LIB_BPF_PREFIX \
-    -DCMAKE_CXX_STANDARD=17 \
+    -DCMAKE_CXX_STANDARD=20 \
     -DBUILD_TESTS=On"
 
     # Append verbose flag if VERBOSE is set to 1
